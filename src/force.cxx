@@ -63,7 +63,10 @@ Force::Force(Model* modelin, Input* inputin)
     if (swlspres != "0")
     {
         if (swlspres == "uflux")
+        {
             nerror += inputin->get_item(&uflux, "force", "uflux", "");
+            nerror += inputin->get_item(&vflux, "force", "vflux", "");
+        }
         else if (swlspres == "geo")
             nerror += inputin->get_item(&fc, "force", "fc", "");
         else
@@ -196,6 +199,7 @@ void Force::create(Input *inputin)
     if (model->stats->get_switch() == "1" && swlspres == "uflux")
     {
         model->stats->add_time_series("ubody", "U velocity forcing to maintain constant uflux", "m s-2");
+        model->stats->add_time_series("vbody", "V velocity forcing to maintain constant vflux", "m s-2");
     }
 
     if (nerror)
@@ -211,13 +215,20 @@ void Force::exec(double dt)
             (model->immersed_boundary->get_switch() != Immersed_boundary::Poly_type))
         {
             model->immersed_boundary->get_mask(fields->atmp["tmp1"], fields->atmp["tmp2"]);
-            fbody_u = calc_flux(fields->ut->data, fields->u->data, grid->dz, dt, fields->atmp["tmp1"]->data);
+
+            fbody_u = calc_flux(fields->ut->data, fields->u->data, grid->dz, dt, grid->utrans, uflux, fields->atmp["tmp1"]->data);
             add_flux(fields->ut->data, fbody_u, fields->atmp["tmp1"]->data);
+
+            fbody_v = calc_flux(fields->vt->data, fields->v->data, grid->dz, dt, grid->vtrans, vflux, fields->atmp["tmp1"]->data);
+            add_flux(fields->vt->data, fbody_v, fields->atmp["tmp1"]->data);
         }
         else
         {
-            fbody_u = calc_flux(fields->ut->data, fields->u->data, grid->dz, dt);
+            fbody_u = calc_flux(fields->ut->data, fields->u->data, grid->dz, dt, grid->utrans, uflux);
             add_flux(fields->ut->data, fbody_u);
+
+            fbody_v = calc_flux(fields->vt->data, fields->v->data, grid->dz, dt, grid->vtrans, vflux);
+            add_flux(fields->vt->data, fbody_v);
         }
     }
 
@@ -319,12 +330,10 @@ void Force::update_time_dependent_profs(const double fac0, const double fac1, co
 #endif
 
 double Force::calc_flux(double* const restrict ut, const double* const restrict u, 
-                      const double* const restrict dz, const double dt)
+                        const double* const restrict dz, const double dt, const double ugrid, const double uflux)
 {
     const int jj = grid->icells;
     const int kk = grid->ijcells;
-
-    const double ugrid = grid->utrans;
 
     double uavg  = 0.;
     double utavg = 0.;
@@ -350,12 +359,11 @@ double Force::calc_flux(double* const restrict ut, const double* const restrict 
 
 // Overloaded calc_flux which accounts for mask
 double Force::calc_flux(double* const restrict ut, const double* const restrict u, 
-                        const double* const restrict dz, const double dt, const double* const restrict mask)
+                        const double* const restrict dz, const double dt, const double ugrid, const double uflux,
+			const double* const restrict mask)
 {
     const int jj = grid->icells;
     const int kk = grid->ijcells;
-
-    const double ugrid = grid->utrans;
 
     double uavg  = 0.;
     double utavg = 0.;
