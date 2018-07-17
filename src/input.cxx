@@ -63,7 +63,7 @@ void Input::clear()
 int Input::read_ini_file()
 {
     int nerror = 0;
-    char inputline[256], temp1[256], block[256], lhs[256], rhs[256], dummy[256], element[256];
+    char inputline[1024], temp1[1024], block[1024], lhs[1024], rhs[1024], dummy[1024], element[1024];
 
     // read the input file
     FILE *inputfile = 0;
@@ -93,7 +93,7 @@ int Input::read_ini_file()
     if (master->mpiid == 0)
     {
         std::printf("Processing ini file \"%s\"\n", inputfilename.c_str());
-        while (std::fgets(inputline, 256, inputfile) != NULL)
+        while (std::fgets(inputline, 1024, inputfile) != NULL)
             nlines++;
         rewind(inputfile);
     }
@@ -106,9 +106,9 @@ int Input::read_ini_file()
         if (master->mpiid == 0)
         {
             // fetch a line and broadcast it
-            std::fgets(inputline, 256, inputfile);
+            std::fgets(inputline, 1024, inputfile);
         }
-        master->broadcast(inputline, 256);
+        master->broadcast(inputline, 1024);
 
         // check for empty line
         n = std::sscanf(inputline, " %s ", temp1);
@@ -198,7 +198,7 @@ int Input::read_ini_file()
 int Input::read_data_file(Data_map* series, std::string inputname, bool optional)
 {
     int nerror = 0;
-    char inputline[256], temp1[256];
+    char inputline[1024], temp1[1024];
     char* substring;
     int n;
 
@@ -238,7 +238,7 @@ int Input::read_data_file(Data_map* series, std::string inputname, bool optional
     if (master->mpiid == 0)
     {
         std::printf("Processing data file \"%s\"\n", inputfilename.c_str());
-        while (std::fgets(inputline, 256, inputfile) != NULL)
+        while (std::fgets(inputline, 1024, inputfile) != NULL)
             nlines++;
         rewind(inputfile);
     }
@@ -253,9 +253,9 @@ int Input::read_data_file(Data_map* series, std::string inputname, bool optional
         if (master->mpiid == 0)
         {
             // fetch a line and broadcast it
-            std::fgets(inputline, 256, inputfile);
+            std::fgets(inputline, 1024, inputfile);
         }
-        master->broadcast(inputline, 256);
+        master->broadcast(inputline, 1024);
 
         // check for empty line
         n = std::sscanf(inputline, " %s ", temp1);
@@ -322,9 +322,9 @@ int Input::read_data_file(Data_map* series, std::string inputname, bool optional
         if (master->mpiid == 0)
         {
             // fetch a line and broadcast it
-            std::fgets(inputline, 256, inputfile);
+            std::fgets(inputline, 1024, inputfile);
         }
-        master->broadcast(inputline, 256);
+        master->broadcast(inputline, 1024);
 
         // check for empty line
         n = std::sscanf(inputline, " %s ", temp1);
@@ -485,7 +485,7 @@ int Input::parse_item(valuetype* value, std::string cat, std::string item, std::
 
 int Input::check_item(int* value, std::string cat, std::string item, std::string el)
 {
-    char inputstring[256], temp[256];
+    char inputstring[1024], temp[1024];
     std::strcpy(inputstring, inputlist[cat][item][el].data.c_str());
 
     int inputint;
@@ -537,7 +537,7 @@ int Input::get_item(double* value, std::string cat, std::string item, std::strin
 
 int Input::check_item(double* value, std::string cat, std::string item, std::string el)
 {
-    char inputstring[256], temp[256];
+    char inputstring[1024], temp[1024];
     std::strcpy(inputstring, inputlist[cat][item][el].data.c_str());
 
     double inputdouble;
@@ -588,7 +588,7 @@ int Input::get_item(bool* value, std::string cat, std::string item, std::string 
 
 int Input::check_item(bool* value, std::string cat, std::string item, std::string el)
 {
-    char inputstring[256], inputbool[256], temp[256];
+    char inputstring[1024], inputbool[1024], temp[1024];
     std::strcpy(inputstring, inputlist[cat][item][el].data.c_str());
 
     int n = std::sscanf(inputstring, " %s %[^\n] ", inputbool, temp);
@@ -651,7 +651,7 @@ int Input::get_item(std::string* value, std::string cat, std::string item, std::
 
 int Input::check_item(std::string* value, std::string cat, std::string item, std::string el)
 {
-    char inputstring[256], stringval[256], dummy[256];
+    char inputstring[1024], stringval[1024], dummy[1024];
     std::strcpy(inputstring, inputlist[cat][item][el].data.c_str());
 
     int n = std::sscanf(inputstring, " %s %[^\n] ", stringval, dummy);
@@ -736,10 +736,10 @@ int Input::parse_list(std::vector<valuetype>* value, std::string cat, std::strin
 
 int Input::check_list(std::vector<std::string>* value, std::string cat, std::string item, std::string el)
 {
-    char inputstring[256], dummy[256];
+    char inputstring[1024], dummy[1024];
     std::strcpy(inputstring, inputlist[cat][item][el].data.c_str());
 
-    char temp1[256];
+    char temp1[1024];
     char* temp2;
     std::strcpy(temp1, inputstring);
 
@@ -782,12 +782,12 @@ int Input::check_list(std::vector<std::string>* value, std::string cat, std::str
 
 int Input::check_list(std::vector<int>* value, std::string cat, std::string item, std::string el)
 {
-    char inputstring[256], dummy[256];
+    char inputstring[1024], dummy[1024];
     std::strcpy(inputstring, inputlist[cat][item][el].data.c_str());
 
     int listval;
 
-    char temp1[256];
+    char temp1[1024];
     char* temp2;
     std::strcpy(temp1, inputstring);
 
@@ -830,12 +830,12 @@ int Input::check_list(std::vector<int>* value, std::string cat, std::string item
 
 int Input::check_list(std::vector<double>* value, std::string cat, std::string item, std::string el)
 {
-    char inputstring[256], dummy[256];
+    char inputstring[1024], dummy[1024];
     std::strcpy(inputstring, inputlist[cat][item][el].data.c_str());
 
     double listval;
 
-    char temp1[256];
+    char temp1[1024];
     char* temp2;
     std::strcpy(temp1, inputstring);
 
@@ -966,7 +966,7 @@ int Input::get_time_prof(double** timeprof, std::vector<double>* timelist, std::
     for (Data_map::const_iterator it=rawdata.begin(); it!=rawdata.end(); ++it)
     {
         // check whether the item name is of type double
-        char inputstring[256], temp[256];
+        char inputstring[1024], temp[1024];
         std::strcpy(inputstring, it->first.c_str());
         double timedouble;
         int n = std::sscanf(inputstring, " %lf %[^\n] ", &timedouble, temp);
