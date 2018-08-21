@@ -37,6 +37,7 @@ class Pres;
 class Force;
 class Thermo;
 class Buffer;
+class Source;
 class Stats;
 class Cross;
 class Dump;
@@ -71,6 +72,7 @@ class Model
         Force*    force;   
         Thermo*   thermo;
         Buffer*   buffer;
+        Source*   source;
 
         Immersed_boundary* immersed_boundary;
 

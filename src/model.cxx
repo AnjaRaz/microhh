@@ -35,6 +35,7 @@
 #include "thermo.h"
 #include "boundary.h"
 #include "buffer.h"
+#include "source.h"
 #include "immersed_boundary.h"
 #include "force.h"
 #include "stats.h"
@@ -61,6 +62,7 @@ Model::Model(Master *masterin, Input *inputin)
     timeloop = 0;
     force    = 0;
     buffer   = 0;
+    source   = 0;
 
     stats  = 0;
     cross  = 0;
@@ -85,6 +87,7 @@ Model::Model(Master *masterin, Input *inputin)
         timeloop = new Timeloop(this, input);
         force    = new Force   (this, input);
         buffer   = new Buffer  (this, input);
+        source   = new Source  (*master, *grid, *fields, *input);
 
         immersed_boundary = new Immersed_boundary(this, input);
 
@@ -137,6 +140,7 @@ void Model::delete_objects()
     delete dump;
     delete cross;
     delete stats;
+    delete source;
     delete buffer;
     delete force;
     delete pres;
@@ -171,6 +175,7 @@ void Model::init()
     force            ->init();
     pres             ->init();
     thermo           ->init();
+    source           ->init();
 
     stats ->init(timeloop->get_ifactor());
     cross ->init(timeloop->get_ifactor());
@@ -198,6 +203,7 @@ void Model::load()
     immersed_boundary->create();
 
     buffer->create(input);
+    source->create(*input);
     force ->create(input);
     thermo->create(input);
 
@@ -283,6 +289,9 @@ void Model::exec()
         thermo->exec();
         // Calculate the tendency due to damping in the buffer layer.
         buffer->exec();
+
+        // Calculate tendencies caused by externally added sources.
+        source->exec();
 
         // Apply the large scale forcings. Keep this one always right before the pressure.
         force->exec(timeloop->get_sub_time_step());
