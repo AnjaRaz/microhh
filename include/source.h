@@ -67,7 +67,7 @@ class Source
         std::vector<double> calc_source(const double* const, const double, const double,
                         const double* const, const double, const double,
                         const double* const, const double, const double,
-                        double*, double*, double*,
-                        const int, const double);
+                        std::vector<double>, std::vector<double>, std::vector<double>,
+                        const double, double);
 };
 #endif
