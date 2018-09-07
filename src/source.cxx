@@ -34,21 +34,6 @@
 
 namespace
 {
-    // Function to add external source to 3d fields. Add additional required variables...
-    // void add_source(double* restrict at, const double* restrict a)
-    // {
-    // }
-    /*
-    isize_block = 4;
-    jsize_block = 5
-    ksize_block = 6
-
-    block(isize_block*jsize_block*ksize_block);
-
-    ijk = i + j*isize_block + k*isize_block*jsize_block;
-
-    block[ijk] = a;
-    */
 
     struct Shape
     {
@@ -58,14 +43,14 @@ namespace
     };
 
 
-    std::vector<double> calc_shape(const double* restrict xh, const double x0, const double sigma_x, int istart, int iend)
+    std::vector<double> calc_shape(const double* restrict x, const double x0, const double sigma_x, int istart, int iend)
     {
         std::vector<double> range(2);
 
         int i = istart;
         for (; i<iend; ++i)
         {
-            if ( std::abs(xh[i]-x0) < 4*sigma_x )
+            if ( std::abs(x[i]-x0) < 4*sigma_x )
             {
                 range[0] = i;
                 break;
@@ -73,9 +58,9 @@ namespace
         }
 
         for (; i<iend; ++i)
-            if ( std::abs(xh[i]-x0) > 4*sigma_x )
+            if ( std::abs(x[i]-x0) > 4*sigma_x )
             {
-                range[1] = i;
+                range[1] = i-1;
                 break;
             }
 
@@ -123,19 +108,25 @@ void Source::create(Input& input)
 {
     double norm;
 
-    std::vector<Shape> shape(source_x0.size());
-    // Next functions are called in exec()?
+    double a = grid.kstart;
 
-    for (int n=0; source_x0.size(); ++n)
+    std::vector<Shape> shape(source_x0.size());
+    std::vector<double> blob;
+
+    //std::cout<<grid.x<<"\n";
+
+    for (int n=0; n<source_x0.size(); ++n)
     {
         // Shape of the source in each direction
-        shape[n].range_x = calc_shape(grid.xh, source_x0[n], sigma_x[n], grid.istart, grid.iend);
-        shape[n].range_y = calc_shape(grid.yh, source_y0[n], sigma_y[n], grid.jstart, grid.jend);
-        shape[n].range_z = calc_shape(grid.zh, source_z0[n], sigma_z[n], grid.kstart, grid.kend);
+        shape[n].range_x = calc_shape(grid.x, source_x0[n], sigma_x[n], grid.istart, grid.iend);
+        shape[n].range_y = calc_shape(grid.y, source_y0[n], sigma_y[n], grid.jstart, grid.jend);
+        shape[n].range_z = calc_shape(grid.z, source_z0[n], sigma_z[n], grid.kstart, grid.kend);
 
-        // The norm
-        norm = calc_norm(grid.xh, source_x0[n], sigma_x[n], grid.yh, source_y0[n], sigma_y[n], grid.zh, source_z0[n], sigma_z[n], shape[n].range_x, shape[n].range_y, shape[n].range_z);
+        norm = calc_norm(grid.x, source_x0[n], sigma_x[n], grid.y, source_y0[n], sigma_y[n], grid.z, source_z0[n], sigma_z[n], shape[n].range_x, shape[n].range_y, shape[n].range_z);
+        
+        std::cout<<norm<<"\n";
 
+        blob = calc_source(grid.x, source_x0[n], sigma_x[n], grid.y, source_y0[n], sigma_y[n], grid.z, source_z0[n], sigma_z[n], shape[n].range_x, shape[n].range_y, shape[n].range_z, strength[n], norm);
     }
 }
 
@@ -145,59 +136,68 @@ void Source::exec()
 }
 
 
-double Source::calc_norm(const double* const restrict xh, const double x0, const double sigma_x,
-                         const double* const restrict yh, const double y0, const double sigma_y,
-                         const double* const restrict zh, const double z0, const double sigma_z,
+double Source::calc_norm(const double* const restrict x, const double x0, const double sigma_x,
+                         const double* const restrict y, const double y0, const double sigma_y,
+                         const double* const restrict z, const double z0, const double sigma_z,
                          std::vector<double> range_x, std::vector<double>range_y, std::vector<double> range_z)
 {
-    double sum = 0;
-    double blob_norm;
+    double sum = 0.;
+    double blob_norm = 0.;
 
-    for (int k = grid.kstart; k = grid.kend; ++k)
-        for (int j = grid.jstart; j = grid.jend; ++j)
-            for (int i = grid.istart; i = grid.iend; ++i)
+    std::cout<<grid.kstart<<"" ""<<grid.kend<<" "<<grid.jstart<<" "<<grid.jend<<" "<<grid.istart<<" "<<grid.iend<<"\n";
+
+    for (int k = grid.kstart; k < grid.kend; ++k)
+        for (int j = grid.jstart; j < grid.jend; ++j)
+            for (int i = grid.istart; i < grid.iend; ++i)
             {
-                // const int ijk = i + j*jj + k*kk;
+                //std::cout<<z[k]<<" "<<x[i]<<" "<<y[j]<< "\n";
 
-                double blob_norm = 0;
-                if (i>range_x[0] and i<range_x[1] and j>range_y[0] and j<range_y[1] and k>range_z[0] and k<range_z[1])
-                    blob_norm = exp(-pow(xh[i]-x0,2)/pow(sigma_x,2) - pow(yh[i]-y0,2)/pow(sigma_y,2) - pow(zh[k]-z0,2)/pow(sigma_z,2));
+                if (i>range_x[0] && i<range_x[1] && j>range_y[0] && j<range_y[1] && k>range_z[0] && k<range_z[1])
+                    std::cout<< i << " " << j << " " << k << "\n ";
+                    blob_norm = exp(-pow(x[i]-x0,2.0)/pow(sigma_x,2.0) - pow(y[j]-y0,2.0)/pow(sigma_y,2.0) - pow(z[k]-z0,2.0)/pow(sigma_z,2.0));
+
+                //std::cout<<pow(x[i]-x0,2)/pow(sigma_x,2)<<" "<<pow(y[j]-y0,2)/pow(sigma_y,2)<<" "<<pow(z[k]-z0,2)/pow(sigma_z,2);
+                //std::cout<<"\n";
 
                 sum += blob_norm*grid.dx*grid.dy*grid.dz[k];
-        }
+            }
 
+    std::cout<<"Norm:"<<sum<<"\n";
     return sum;
 }
 
 
-std::vector<double> Source::calc_source(const double* const restrict xh, const double x0, const double sigma_x,
-                            const double* const restrict yh, const double y0, const double sigma_y,
-                            const double* const restrict zh, const double z0, const double sigma_z,
-                            double* range_x, double* range_y, double* range_z,
-                            const int strength, const double norm)
+std::vector<double> Source::calc_source(const double* const restrict x, const double x0, const double sigma_x,
+                            const double* const restrict y, const double y0, const double sigma_y,
+                            const double* const restrict z, const double z0, const double sigma_z,
+                            std::vector<double> range_x, std::vector<double>range_y, std::vector<double> range_z,
+                            const double strength, double norm)
 {
 
-    double sum = 0;
+    double sum = 0.;
     const int ii = 1;
     const int jj = grid.icells;
     const int kk = grid.ijcells;
-    std::vector<double> blob;
+    std::vector<double> blob((grid.iend)+jj*grid.jend+kk*grid.kend);
 
 
-    for (int k = grid.kstart; k = grid.kend; ++k)
-        for (int j = grid.jstart; j = grid.jend; ++j)
-            for (int i = grid.istart; i = grid.iend; ++i)
+    for (int k = grid.kstart; k < grid.kend; ++k)
+        for (int j = grid.jstart; j < grid.jend; ++j)
+            for (int i = grid.istart; i < grid.iend; ++i)
             {
+                //std::cout<< i << " " << j << " " << k << "\n";
                 const int ijk = i + j*jj + k*kk;
 
-                if (i>range_x[0] and i<range_x[1] and j>range_y[0] and j<range_y[1] and k>range_z[0] and k<range_z[1])
-                    blob[ijk] = strength/norm*exp(-pow(xh[i]-x0,2)/pow(sigma_x,2) - pow(yh[i]-y0,2)/pow(sigma_y,2) - pow(zh[k]-z0,2)/pow(sigma_z,2));
-
+                if (i>=range_x[0] && i<=range_x[1] && j>=range_y[0] && j<=range_y[1] && k>=range_z[0] && k<=range_z[1])
+                {
+                    //std::cout<< i << " " << j << " " << k;
+                    blob[ijk] = strength/norm*exp(-pow(x[i]-x0,2.0)/pow(sigma_x,2.0) - pow(y[j]-y0,2.0)/pow(sigma_y,2.0) - pow(z[k]-z0,2.0)/pow(sigma_z,2.0));
+                }
                 else
-                    blob[ijk] = 0;
+                    blob[ijk] = 0.;
 
-                sum+=sum+blob[ijk];
+                sum += blob[ijk]*grid.dx*grid.dy*grid.dz[k];
+                std::cout<<sum<<"\n";
             }
-
     return blob;
 }
