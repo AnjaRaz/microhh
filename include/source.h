@@ -51,23 +51,27 @@ class Source
         double x0;
         double y0;
         double z0;
-        std::vector<double> source_x0;
-        std::vector<double> source_y0;
-        std::vector<double> source_z0;
-        std::vector<double> sigma_x;
-        std::vector<double> sigma_y;
-        std::vector<double> sigma_z;
-        std::vector<double> strength;
+        std::vector<std::string> sourcelist;
+        std::vector<double>      source_x0;
+        std::vector<double>      source_y0;
+        std::vector<double>      source_z0;
+        std::vector<double>      sigma_x;
+        std::vector<double>      sigma_y;
+        std::vector<double>      sigma_z;
+        std::vector<double>      strength;
+        std::vector<double>      blob;
 
         double calc_norm(const double* const, const double, const double,
                         const double* const, const double, const double,
                         const double* const, const double, const double,
                         std::vector<double>, std::vector<double>, std::vector<double>);
 
-        std::vector<double> calc_source(const double* const, const double, const double,
+        void calc_source(double* const, const double* const, const double, const double,
                         const double* const, const double, const double,
                         const double* const, const double, const double,
                         std::vector<double>, std::vector<double>, std::vector<double>,
                         const double, double);
+                        
+        void add_source(double* const, const double* const);
 };
 #endif
