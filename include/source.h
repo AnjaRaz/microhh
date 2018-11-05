@@ -59,19 +59,22 @@ class Source
         std::vector<double>      sigma_y;
         std::vector<double>      sigma_z;
         std::vector<double>      strength;
+        std::vector<double>      line_x;
+        std::vector<double>      line_y;
+        std::vector<double>      line_z;
         std::vector<double>      blob;
 
-        double calc_norm(const double* const, const double, const double,
-                        const double* const, const double, const double,
-                        const double* const, const double, const double,
-                        std::vector<double>, std::vector<double>, std::vector<double>);
+        double calc_norm(const double* const, const double, const double, const double,
+                        const double* const, const double, const double, const double,
+                        const double* const, const double, const double, const double,
+                        std::vector<int>, std::vector<int>, std::vector<int>);
 
-        void calc_source(double* const, const double* const, const double, const double,
-                        const double* const, const double, const double,
-                        const double* const, const double, const double,
-                        std::vector<double>, std::vector<double>, std::vector<double>,
+        void calc_source(double* const, const double* const, const double, const double, const double,
+                        const double* const, const double, const double, const double,
+                        const double* const, const double, const double, const double,
+                        std::vector<int>, std::vector<int>, std::vector<int>,
                         const double, double);
                         
-        void add_source(double* const, const double* const);
+        void add_source(double* const, const double* const, std::vector<int>, std::vector<int>, std::vector<int>);
 };
 #endif
